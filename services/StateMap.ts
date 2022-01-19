@@ -71,11 +71,17 @@ export interface StateData {
 		type: number;
 		string?: string;
 		value?: number;
+		state?: boolean;
 	};
 	interval?: number;
 }
 
 export class StateMap extends Service<StateData> {
+
+	public deckStates = {
+		
+	}
+
 	async init() {
 		for (const state of States) {
 			await this.subscribeState(state, 0);
@@ -142,10 +148,39 @@ export class StateMap extends Service<StateData> {
 					`${p_data.message.name.replace(
 						'TrackNetworkPath',
 						'TrackLocalAlbumArtPath'
-					)} => {"string": null, "type":-1}`
+					)} => {"string": "", "type":-1}`
 				);
 			}
 		}
+
+		if (p_data.message.name.match('/Engine/Deck[0-9]{1}')) {
+
+			const deckId = p_data.message.name.match('/Engine/Deck([0-9]{1})')[1]
+			const messageType = p_data.message.name.match('/Engine/Deck([0-9]{1})/(.*)')[2]
+
+			// console.log(`deckId: ${deckId} / messageType: ${messageType}`)
+
+			if (!this.deckStates[deckId]) this.deckStates[deckId] = {}
+
+			switch (messageType.toLowerCase()) {
+				case 'playstate':
+					this.deckStates[deckId]['playing'] = p_data.message.json.state
+					break
+				case 'track/songname':
+					this.deckStates[deckId]['song'] = p_data.message.json.string
+					break
+				case 'track/artistname':
+					this.deckStates[deckId]['artist'] = p_data.message.json.string
+					break
+				case 'externalmixervolume':
+					this.deckStates[deckId]['volume'] = p_data.message.json.value
+					break
+				default:
+					break
+			}
+
+		}
+
 	}
 
 	private async subscribeState(p_state: string, p_interval: number) {

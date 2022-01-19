@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index page</title>
+  </head>
+  <style>
+    body {
+        font-family: "Lato", "Helvetica", Helvetica, sans-serif;
+        background-color: "#000000";
+        color: #ffffff;
+        padding: 0px;
+        letter-spacing: 1px;
+        opacity: 0.9;
+    }
+  </style>
+  <body>
+    <% if (artist && song) { %>
+        <div class="MuiCardContent-root-634 jss581" style="padding: 10px; background: rgba(37, 56, 88);">
+            <p class="MuiGrid-root-471 MuiGrid-container-472 MuiGrid-align-items-xs-center-480 MuiGrid-align-content-xs-center-484 MuiGrid-justify-xs-space-between-491" style="opacity: 0.64;">Now playing</p>
+            <div class="MuiTypography-root-639 jss587 MuiTypography-body1-641"><%=artist%> "<%=song%>"</div>
+        </div>
+     <% } %>
+  </body>
+</html>

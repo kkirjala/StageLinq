@@ -1,15 +1,23 @@
-import { strict as assert } from 'assert';
+//import { strict as assert } from 'assert';
+//import { Controller } from './Controller';
 import { sleep } from './utils/sleep';
-import { Controller } from './Controller';
 import { announce, unannounce } from './announce';
-import { FileTransfer, StateMap } from './services';
-import * as fs from 'fs';
-import minimist = require('minimist');
+
+//import minimist = require('minimist');
+import { ConnectionInfo, Listener } from './Listener';
+import { ControllerMgr } from './ControllerMgr';
+import * as express from 'express'
 
 require('console-stamp')(console, {
 	format: ':date(HH:MM:ss) :label',
 });
 
+const app = express()
+const PORT = 8000
+
+app.set('view engine', 'ejs')
+
+/*
 function makeDownloadPath(p_path: string) {
 	const path = `./localdb/${p_path}`;
 	let paths = path.split(/[/\\]/).filter((e) => e.length > 0);
@@ -23,9 +31,89 @@ function makeDownloadPath(p_path: string) {
 	fs.mkdirSync(newPath, { recursive: true });
 	return newPath + ('/' + filename);
 }
+*/
+
+let currentSong = null
 
 async function main() {
-	const args = minimist(process.argv.slice(2));
+	//const args = minimist(process.argv.slice(2));
+
+	const mgr = new ControllerMgr();
+
+	const detected = function (p_id: number, p_info: ConnectionInfo) {
+		console.info(
+			`Found '${p_info.source}' Controller with ID '${p_id}' at '${p_info.address}:${p_info.port}' with following software:`,
+			p_info.software
+		);
+
+		mgr.createController(p_id, p_info);
+	};
+	const lost = function (p_id: number) {
+		console.info(`Controller with ID '${p_id}' is lost`);
+		mgr.destroyController(p_id);
+	};
+
+	const listener = new Listener(detected, lost);
+
+	const getCurrentlyPlayingSong = () => {
+
+		Object.keys(mgr.controllers).forEach((key) => {
+			const controller = mgr.controllers[key]
+			// console.log(`controller ${controller.id}: ${JSON.stringify(controller.services.StateMap.deckStates)}`)
+
+			Object.keys(controller.services.StateMap.deckStates).forEach((player) => {
+
+				const songInfo = controller.services.StateMap.deckStates[player]
+				const isCurrentSong = currentSong?.player == `${key}_${player}`
+
+				if (isCurrentSong) currentSong.volume = songInfo.volume
+
+				if (!isCurrentSong && songInfo.playing && songInfo.volume > (currentSong?.volume || 0) &&
+				(currentSong?.volume < 0.95 || !currentSong)) {
+					currentSong = {
+						player: `${key}_${player}`,
+						...controller.services.StateMap.deckStates[player] 
+					}
+
+				}
+			})
+
+		})
+
+		console.log(`Current song: ${JSON.stringify(currentSong)}`)
+
+		return currentSong
+	}
+
+	setInterval(getCurrentlyPlayingSong, 5000)
+
+	app.get('/', (req, res) => {
+
+		// res.json(getCurrentlyPlayingSong())
+
+		const currentSong = getCurrentlyPlayingSong()
+
+		res.render('index', {
+			artist: currentSong.artist || '',
+			song: currentSong.song || ''
+		})
+
+	})
+
+	app.listen(PORT, () => {
+		console.log(`⚡️[server]: Server is running at https://localhost:${PORT}`)
+	})
+
+
+	// Main, infinite loop
+	while (true) {
+		const dt = 250; // fixed timestep
+		await sleep(dt);
+		listener.update(dt);
+		mgr.update(dt);
+	}
+
+	/*
 	const controller = new Controller();
 	await controller.connect();
 
@@ -53,7 +141,8 @@ async function main() {
 		}
 	}
 
-	await controller.connectToService(StateMap);
+
+	*/
 
 	// Endless loop
 	while (true) {
@@ -77,6 +166,9 @@ async function main() {
 		});
 
 		await announce();
+
+		// FIXME: main should be called when we found a device; not after waiting some random amount of time
+		await sleep(500);
 		await main();
 	} catch (err) {
 		const message = err.stack.toString();
