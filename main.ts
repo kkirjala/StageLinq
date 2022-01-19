@@ -64,15 +64,26 @@ async function main() {
 			Object.keys(controller.services.StateMap.deckStates).forEach((player) => {
 
 				const songInfo = controller.services.StateMap.deckStates[player]
-				const isCurrentSong = currentSong?.player == `${key}_${player}`
+				const isCurrentSong = currentSong?.player == `${key}_${player}` && currentSong?.artist == songInfo.artist && currentSong?.song == songInfo.song
 
-				if (isCurrentSong) currentSong.volume = songInfo.volume
+				// console.log(`isCurrentSong: ${isCurrentSong}`)
 
-				if (!isCurrentSong && songInfo.playing && songInfo.volume > (currentSong?.volume || 0) &&
-				(currentSong?.volume < 0.95 || !currentSong)) {
+				// same player+deck, different song
+				if (currentSong?.player == `${key}_${player}` && !isCurrentSong) {
+					// console.log(`changing current player's song!`)
 					currentSong = {
 						player: `${key}_${player}`,
-						...controller.services.StateMap.deckStates[player] 
+						...songInfo
+					}
+				} else if (isCurrentSong && currentSong.volume != songInfo.volume) {
+					// same player+deck+song, volume change
+					currentSong.volume = songInfo.volume
+				} else if (!isCurrentSong && songInfo.playing && songInfo.volume > (currentSong?.volume || 0) &&
+				(currentSong?.volume < 0.95 || !currentSong)) {
+					// different player+deck+song, previous/current about to face away
+					currentSong = {
+						player: `${key}_${player}`,
+						...songInfo
 					}
 
 				}
