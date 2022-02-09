@@ -75,28 +75,29 @@ async function main() {
 						player: `${key}_${player}`,
 						...songInfo
 					}
+
+					console.log(`song change1;${currentSong.artist};${currentSong.song}`)
 				} else if (isCurrentSong && currentSong.volume != songInfo.volume) {
 					// same player+deck+song, volume change
 					currentSong.volume = songInfo.volume
 				} else if (!isCurrentSong && songInfo.playing && songInfo.volume > (currentSong?.volume || 0) &&
 				(currentSong?.volume < 0.95 || !currentSong)) {
-					// different player+deck+song, previous/current about to face away
+					// different player+deck+song, previous/current about to fade away
 					currentSong = {
 						player: `${key}_${player}`,
 						...songInfo
 					}
 
+					console.log(`song change2;${currentSong.artist};${currentSong.song}`)
 				}
 			})
 
 		})
 
-		console.log(`Current song: ${JSON.stringify(currentSong)}`)
-
 		return currentSong
 	}
 
-	setInterval(getCurrentlyPlayingSong, 5000)
+	// setInterval(getCurrentlyPlayingSong, 5000)
 
 	app.get('/', (req, res) => {
 
