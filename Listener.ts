@@ -9,6 +9,7 @@ import {
 } from './common';
 import { createSocket, Socket, RemoteInfo } from 'dgram';
 import { ReadContext } from './utils/ReadContext';
+import { logger } from './logger'
 
 export interface ConnectionInfo extends DiscoveryMessage {
 	address: string;
@@ -89,7 +90,7 @@ export class Listener {
 			}
 		});
 
-		console.info('Listening for StageLinq devices ...');
+		logger.info('Listening for StageLinq devices ...');
 		this.socket.bind(LISTEN_PORT);
 	}
 

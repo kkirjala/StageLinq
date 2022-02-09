@@ -6,6 +6,7 @@ import * as tcp from '../utils/tcp';
 import * as EventEmitter from 'events';
 import { Controller } from '../Controller';
 //import { hex } from '../utils/hex';
+import { logger } from '../logger'
 
 export abstract class Service<T> extends EventEmitter {
 	private address: string;
@@ -52,7 +53,7 @@ export abstract class Service<T> extends EventEmitter {
 						const message = ctx.read(length);
 						// Use slice to get an actual copy of the message instead of working on the shared underlying ArrayBuffer
 						const data = message.buffer.slice(message.byteOffset, message.byteOffset + length);
-						//console.info("RECV", length);
+						//logger.info("RECV", length);
 						//hex(message);
 						const parsedData = this.parseData(new ReadContext(data, false));
 
@@ -81,7 +82,7 @@ export abstract class Service<T> extends EventEmitter {
 
 		await this.init();
 
-		console.info(`Connected to service '${this.name}' at port ${this.port}`);
+		logger.info(`Connected to service '${this.name}' at port ${this.port}`);
 	}
 
 	disconnect() {
@@ -109,7 +110,7 @@ export abstract class Service<T> extends EventEmitter {
 		assert(p_ctx.isLittleEndian() === false);
 		assert(this.connection);
 		const buf = p_ctx.getBuffer();
-		//console.info("SEND");
+		//logger.info("SEND");
 		//hex(buf);
 		const written = await this.connection.write(buf);
 		assert(written === buf.byteLength);

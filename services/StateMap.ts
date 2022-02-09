@@ -3,6 +3,7 @@ import { StageLinqValue } from '../common';
 import { ReadContext } from '../utils/ReadContext';
 import { WriteContext } from '../utils/WriteContext';
 import { Service } from './Service';
+import { logger } from '../logger'
 
 export const States = [
 	// Mixer
@@ -126,7 +127,7 @@ export class StateMap extends Service<StateData> {
 	}
 
 	protected messageHandler(p_data: ServiceMessage<StateData>): void {
-		console.log(
+		logger.debug(
 			`${p_data.message.name} => ${
 				p_data.message.json ? JSON.stringify(p_data.message.json) : p_data.message.interval
 			}`
@@ -137,14 +138,14 @@ export class StateMap extends Service<StateData> {
 
 			// Now pretend as if this is a value outputted by the device
 			if (path) {
-				console.log(
+				logger.debug(
 					`${p_data.message.name.replace(
 						'TrackNetworkPath',
 						'TrackLocalAlbumArtPath'
 					)} => {"string": "${path}", "type":0}`
 				);
 			} else {
-				console.log(
+				logger.debug(
 					`${p_data.message.name.replace(
 						'TrackNetworkPath',
 						'TrackLocalAlbumArtPath'
@@ -158,7 +159,7 @@ export class StateMap extends Service<StateData> {
 			const deckId = p_data.message.name.match('/Engine/Deck([0-9]{1})')[1]
 			const messageType = p_data.message.name.match('/Engine/Deck([0-9]{1})/(.*)')[2]
 
-			// console.log(`deckId: ${deckId} / messageType: ${messageType}`)
+			// logger.debug(`deckId: ${deckId} / messageType: ${messageType}`)
 
 			if (!this.deckStates[deckId]) this.deckStates[deckId] = {}
 
@@ -184,7 +185,7 @@ export class StateMap extends Service<StateData> {
 	}
 
 	private async subscribeState(p_state: string, p_interval: number) {
-		//console.log(`Subscribe to state '${p_state}'`);
+		//logger.debug(`Subscribe to state '${p_state}'`);
 		const getMessage = function (): Buffer {
 			const ctx = new WriteContext();
 			ctx.writeFixedSizedString(MAGIC_MARKER);

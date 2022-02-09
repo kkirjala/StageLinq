@@ -142,7 +142,7 @@ export class FileTransfer extends Service<FileTransferData> {
 			assert(this.receivedFile.sizeLeft() >= p_data.message.size);
 			this.receivedFile.write(p_data.message.data);
 		} else {
-			//console.log(p_data);
+			//logger.debug(p_data);
 		}
 	}
 

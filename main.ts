@@ -8,9 +8,13 @@ import { ConnectionInfo, Listener } from './Listener';
 import { ControllerMgr } from './ControllerMgr';
 import * as express from 'express'
 
+/*
 require('console-stamp')(console, {
 	format: ':date(HH:MM:ss) :label',
 });
+*/
+
+import { logger } from './logger'
 
 const app = express()
 const PORT = 8000
@@ -41,7 +45,7 @@ async function main() {
 	const mgr = new ControllerMgr();
 
 	const detected = function (p_id: number, p_info: ConnectionInfo) {
-		console.info(
+		logger.info(
 			`Found '${p_info.source}' Controller with ID '${p_id}' at '${p_info.address}:${p_info.port}' with following software:`,
 			p_info.software
 		);
@@ -49,7 +53,7 @@ async function main() {
 		mgr.createController(p_id, p_info);
 	};
 	const lost = function (p_id: number) {
-		console.info(`Controller with ID '${p_id}' is lost`);
+		logger.info(`Controller with ID '${p_id}' is lost`);
 		mgr.destroyController(p_id);
 	};
 
@@ -59,24 +63,24 @@ async function main() {
 
 		Object.keys(mgr.controllers).forEach((key) => {
 			const controller = mgr.controllers[key]
-			// console.log(`controller ${controller.id}: ${JSON.stringify(controller.services.StateMap.deckStates)}`)
+			// logger.debug(`controller ${controller.id}: ${JSON.stringify(controller.services.StateMap.deckStates)}`)
 
 			Object.keys(controller.services.StateMap.deckStates).forEach((player) => {
 
 				const songInfo = controller.services.StateMap.deckStates[player]
 				const isCurrentSong = currentSong?.player == `${key}_${player}` && currentSong?.artist == songInfo.artist && currentSong?.song == songInfo.song
 
-				// console.log(`isCurrentSong: ${isCurrentSong}`)
+				// logger.debug(`isCurrentSong: ${isCurrentSong}`)
 
 				// same player+deck, different song
 				if (currentSong?.player == `${key}_${player}` && !isCurrentSong) {
-					// console.log(`changing current player's song!`)
+					// logger.debug(`changing current player's song!`)
 					currentSong = {
 						player: `${key}_${player}`,
 						...songInfo
 					}
 
-					console.log(`song change1;${currentSong.artist};${currentSong.song}`)
+					logger.info(`song change1;${currentSong.artist};${currentSong.song}`)
 				} else if (isCurrentSong && currentSong.volume != songInfo.volume) {
 					// same player+deck+song, volume change
 					currentSong.volume = songInfo.volume
@@ -88,7 +92,7 @@ async function main() {
 						...songInfo
 					}
 
-					console.log(`song change2;${currentSong.artist};${currentSong.song}`)
+					logger.info(`song change2;${currentSong.artist};${currentSong.song}`)
 				}
 			})
 
@@ -97,7 +101,7 @@ async function main() {
 		return currentSong
 	}
 
-	// setInterval(getCurrentlyPlayingSong, 5000)
+	setInterval(getCurrentlyPlayingSong, 5000)
 
 	app.get('/', (req, res) => {
 
@@ -113,7 +117,7 @@ async function main() {
 	})
 
 	app.listen(PORT, () => {
-		console.log(`⚡️[server]: Server is running at https://localhost:${PORT}`)
+		logger.debug(`⚡️[server]: Server is running at https://localhost:${PORT}`)
 	})
 
 
@@ -141,7 +145,7 @@ async function main() {
 				if (sync) {
 					const file = await ftx.getFile(source.database.location);
 					fs.writeFileSync(dbPath, file);
-					console.info(`downloaded: '${source.database.location}' and stored in '${dbPath}'`);
+					logger.info(`downloaded: '${source.database.location}' and stored in '${dbPath}'`);
 				}
 				await controller.addSource(source.name, dbPath, makeDownloadPath(`${source.name}/Album Art/`));
 
@@ -166,7 +170,7 @@ async function main() {
 	let returnCode = 0;
 	try {
 		process.on('SIGINT', async function () {
-			console.info('... exiting');
+			logger.info('... exiting');
 			// Ensure SIGINT won't be impeded by some error
 			try {
 				await unannounce();

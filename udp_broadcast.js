@@ -24,12 +24,12 @@ socket.bind(multicastPort);
 // socket.addMembership(multicastAddress);
 
 socket.on('listening', () => {
-    console.log('adding membership');
+    logger.debug('adding membership');
     socket.addMembership(multicastAddress);
 })
 
 socket.on("message", function ( data, rinfo ) {
-  console.log("Message received from ", rinfo.address, " : ", data.toString());
+  logger.debug("Message received from ", rinfo.address, " : ", data.toString());
 });
 
 setInterval(function () {
@@ -39,9 +39,9 @@ setInterval(function () {
       multicastPort,
       multicastAddress,
       function (err) {
-        if (err) return console.log(err);
+        if (err) return logger.debug(err);
 
-        console.log("Message sent");
+        logger.debug("Message sent");
       }
   );
 }, 1000);

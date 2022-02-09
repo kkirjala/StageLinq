@@ -79,7 +79,7 @@ async function broadcastMessage(p_message: Uint8Array): Promise<void> {
 			}, CONNECT_TIMEOUT);
 
 			announceClient.send(p_message, LISTEN_PORT, p_ip, () => {
-				//console.log('UDP message sent to ' + p_ip);
+				//logger.debug('UDP message sent to ' + p_ip);
 				resolve();
 			});
 		});
@@ -99,7 +99,7 @@ export async function unannounce(): Promise<void> {
 	writeDiscoveryMessage(ctx, announcementMessage);
 	const msg = new Uint8Array(ctx.getBuffer());
 	await broadcastMessage(msg);
-	//console.info("Unannounced myself");
+	//logger.info("Unannounced myself");
 }
 
 export async function announce(): Promise<void> {
@@ -118,5 +118,5 @@ export async function announce(): Promise<void> {
 	await broadcastMessage(msg);
 
 	announceTimer = setInterval(broadcastMessage, ANNOUNCEMENT_INTERVAL, msg);
-	//console.info("Announced myself");
+	//logger.info("Announced myself");
 }

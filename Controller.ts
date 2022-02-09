@@ -8,6 +8,7 @@ import * as tcp from './utils/tcp';
 import * as services from './services';
 import * as fs from 'fs';
 import Database = require('better-sqlite3');
+import { logger } from './logger'
 
 interface ConnectionInfo extends DiscoveryMessage {
 	address: string;
@@ -71,7 +72,7 @@ export class Controller {
 		assert(this.connectionInfo);
 		this.connection = await tcp.connect(this.connectionInfo.address, this.connectionInfo.port);
 		this.connection.socket.on('data', (p_message: Buffer) => {
-			// console.log(`message received from ${this._id} ${this.connectionInfo.address}: ${p_message.toString()}`)
+			// logger.debug(`message received from ${this._id} ${this.connectionInfo.address}: ${p_message.toString()}`)
 			this.messageHandler(p_message);
 		});
 		return await this.requestAvailableServices();
@@ -194,7 +195,7 @@ export class Controller {
 			const filepath = `${path}/${entry.id}${ext}`;
 			fs.writeFileSync(filepath, entry.albumArt);
 		}
-		console.info(`dumped ${result.length} albums arts in '${path}'`);
+		logger.info(`dumped ${result.length} albums arts in '${path}'`);
 	}
 
 	// Database helpers
@@ -282,9 +283,9 @@ export class Controller {
 			while (true) {
 				// FIXME: How to determine when all services have been announced?
 				if (Object.keys(this.servicePorts).length > 3) {
-					console.info('Discovered the following services:');
+					logger.info('Discovered the following services:');
 					for (const [name, port] of Object.entries(this.servicePorts)) {
-						console.info(`\tport: ${port} => ${name}`);
+						logger.info(`\tport: ${port} => ${name}`);
 					}
 					resolve(this.servicePorts);
 					break;
